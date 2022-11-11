@@ -1,7 +1,10 @@
 package com.example.shop.admin.product.model;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -9,6 +12,9 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "product")
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class AdminProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,3 +25,4 @@ public class AdminProduct {
     private BigDecimal price;
     private String currency;
 }
+
