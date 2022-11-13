@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Locale;
 
 @RestController
@@ -18,8 +19,8 @@ public class AdminProductController {
     private final AdminProductService productService;
 
     @GetMapping("/admin/products")
-    public Page<AdminProduct> getProducts(Pageable pageble) {
-        return productService.getProducts(pageble);
+    public Page<AdminProduct> getProducts(Pageable pageable) {
+        return productService.getProducts(pageable);
     }
 
     @GetMapping("/admin/products/{id}")
@@ -28,12 +29,12 @@ public class AdminProductController {
     }
 
     @PostMapping("/admin/products")
-    public AdminProduct createProduct(@RequestBody AdminProductDTO adminProductDTO) {
+    public AdminProduct createProduct(@RequestBody @Valid AdminProductDTO adminProductDTO) {
         return productService.createProduct(mapAdminProduct(adminProductDTO, EMPTY_ID));
     }
 
     @PutMapping("/admin/products/{id}")
-    public AdminProduct updateProduct(@RequestBody AdminProductDTO adminProductDTO,
+    public AdminProduct updateProduct(@RequestBody @Valid AdminProductDTO adminProductDTO,
                                       @PathVariable Long id) {
         return productService.updateProduct(mapAdminProduct(adminProductDTO, id)
         );
