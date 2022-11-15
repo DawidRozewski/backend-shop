@@ -1,6 +1,7 @@
 package com.example.shop.admin.product.controller.dto;
 
 
+import com.example.shop.admin.product.model.AdminProductCurrency;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
@@ -28,5 +29,7 @@ public class AdminProductDTO {
     @Min(4)
     private BigDecimal price;
 
-    private String currency;
+    private AdminProductCurrency currency;
+
+    private String image;
 }
