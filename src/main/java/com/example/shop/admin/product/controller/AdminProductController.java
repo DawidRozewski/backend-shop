@@ -5,6 +5,7 @@ import com.example.shop.admin.product.controller.dto.UploadResponse;
 import com.example.shop.admin.product.model.AdminProduct;
 import com.example.shop.admin.product.service.AdminProductImageService;
 import com.example.shop.admin.product.service.AdminProductService;
+import com.github.slugify.Slugify;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -83,7 +84,15 @@ public class AdminProductController {
                 .price(adminProductDTO.getPrice())
                 .currency(adminProductDTO.getCurrency())
                 .image(adminProductDTO.getImage())
+                .slug(slugifySlug(adminProductDTO.getSlug()))
                 .build();
+    }
+
+    private static String slugifySlug(String slug) {
+        Slugify slugify = new Slugify();
+        return slugify
+                .withCustomReplacement("_", "-")
+                .slugify(slug);
     }
 
 }

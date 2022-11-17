@@ -32,4 +32,8 @@ public class AdminProductDTO {
     private AdminProductCurrency currency;
 
     private String image;
+
+    @NotBlank
+    @Length(min = 4)
+    private String slug;
 }
