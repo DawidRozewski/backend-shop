@@ -33,7 +33,7 @@ public class AdminCategoryController {
     }
 
     @PutMapping("/{id}")
-    public AdminCategory updateCategory(@PathVariable Long id, AdminCategoryDTO adminCategoryDTO) {
+    public AdminCategory updateCategory(@PathVariable Long id, @RequestBody AdminCategoryDTO adminCategoryDTO) {
         return adminCategoryService.updateCategory(mapToAdminCategory(id, adminCategoryDTO));
     }
 
