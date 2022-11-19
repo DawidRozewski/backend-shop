@@ -1,8 +1,8 @@
 package com.example.shop.category.controller;
 
-import com.example.shop.category.model.Category;
-import com.example.shop.category.model.CategoryProductsDTO;
+import com.example.shop.category.controller.dto.CategoryProductsDTO;
 import com.example.shop.category.service.CategoryService;
+import com.example.shop.common.model.Category;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.domain.Pageable;

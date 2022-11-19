@@ -1,6 +1,5 @@
-package com.example.shop.product.model;
+package com.example.shop.common.model;
 
-import com.example.shop.review.model.Review;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

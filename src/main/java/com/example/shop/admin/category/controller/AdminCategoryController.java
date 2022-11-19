@@ -3,11 +3,12 @@ package com.example.shop.admin.category.controller;
 import com.example.shop.admin.category.controller.dto.AdminCategoryDTO;
 import com.example.shop.admin.category.model.AdminCategory;
 import com.example.shop.admin.category.service.AdminCategoryService;
-import com.github.slugify.Slugify;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.shop.admin.common.utils.SlugifyUtils.slugifySlug;
 
 @RestController
 @AllArgsConstructor
@@ -47,13 +48,9 @@ public class AdminCategoryController {
                 .id(id)
                 .name(adminCategoryDTO.getName())
                 .description(adminCategoryDTO.getDescription())
-                .slug(slugifyCategoryName(adminCategoryDTO.getSlug()))
+                .slug(slugifySlug(adminCategoryDTO.getSlug()))
                 .build();
     }
 
-    private String slugifyCategoryName(String slug) {
-        Slugify slugify = new Slugify();
-        return slugify.withCustomReplacement("_", "-").slugify(slug);
 
-    }
 }
