@@ -1,7 +1,7 @@
 package com.example.shop.review.service;
 
 import com.example.shop.common.model.Review;
-import com.example.shop.review.repository.ReviewRepository;
+import com.example.shop.common.repository.ReviewRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
