@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -45,5 +46,17 @@ public class CartService {
                     .build());
         }
         return cartRepository.findById(id).orElseThrow();
+    }
+
+    public Cart updateCart(Long id, List<CartProductDTO> cartProductDTOList) {
+        Cart cart = cartRepository.findById(id).orElseThrow();
+        cart.getItems().forEach(cartItem -> {
+            cartProductDTOList.stream()
+                    .filter(cartProductDTO -> cartItem.getProduct().getId()
+                            .equals(cartProductDTO.productId()))
+                    .findFirst()
+                    .ifPresent(cartProductDTO -> cartItem.setQuantity(cartProductDTO.quantity()));
+        });
+        return cart;
     }
 }
