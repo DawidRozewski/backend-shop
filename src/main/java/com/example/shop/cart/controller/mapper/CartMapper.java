@@ -4,8 +4,8 @@ import com.example.shop.cart.controller.dto.CartSummaryDTO;
 import com.example.shop.cart.controller.dto.CartSummaryItemDTO;
 import com.example.shop.cart.controller.dto.ProductDTO;
 import com.example.shop.cart.controller.dto.SummaryDTO;
-import com.example.shop.cart.model.Cart;
-import com.example.shop.cart.model.CartItem;
+import com.example.shop.common.model.Cart;
+import com.example.shop.common.model.CartItem;
 import com.example.shop.common.model.Product;
 
 import java.math.BigDecimal;

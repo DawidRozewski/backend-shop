@@ -1,6 +1,6 @@
 package com.example.shop.cart.service;
 
-import com.example.shop.cart.repository.CartItemRepository;
+import com.example.shop.common.repository.CartItemRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

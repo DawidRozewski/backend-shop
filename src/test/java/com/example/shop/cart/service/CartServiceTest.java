@@ -1,9 +1,9 @@
 package com.example.shop.cart.service;
 
-import com.example.shop.cart.model.Cart;
 import com.example.shop.cart.model.dto.CartProductDTO;
-import com.example.shop.cart.repository.CartRepository;
+import com.example.shop.common.model.Cart;
 import com.example.shop.common.model.Product;
+import com.example.shop.common.repository.CartRepository;
 import com.example.shop.common.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
