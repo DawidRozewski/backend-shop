@@ -7,10 +7,12 @@ import com.example.shop.common.repository.CartRepository;
 import com.example.shop.order.model.Order;
 import com.example.shop.order.model.OrderRow;
 import com.example.shop.order.model.OrderStatus;
+import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;
 import com.example.shop.order.model.dto.OrderSummary;
 import com.example.shop.order.repository.OrderRepository;
 import com.example.shop.order.repository.OrderRowRepository;
+import com.example.shop.order.repository.ShipmentRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,13 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final OrderRowRepository orderRowRepository;
     private final CartItemRepository cartItemRepository;
+    private final ShipmentRepository shipmentRepository;
 
     @Transactional
     public OrderSummary placeOrder(OrderDTO orderDTO) {
         // stworzenie zamówienia z wierszami
         Cart cart = cartRepository.findById(orderDTO.getCartId()).orElseThrow();
+        Shipment shipment = shipmentRepository.findById(orderDTO.getShipmentId()).orElseThrow();
         Order order = Order.builder()
                 .firstname(orderDTO.getFirstname())
                 .lastname(orderDTO.getLastname())
@@ -42,12 +46,13 @@ public class OrderService {
                 .phone(orderDTO.getPhone())
                 .placeDate(LocalDateTime.now())
                 .orderStatus(OrderStatus.NEW)
-                .grossValue(calculateGrossValue(cart.getItems()))
+                .grossValue(calculateGrossValue(cart.getItems(), shipment))
                 .build();
         // zapisać zamówienie
         Order newOrder = orderRepository.save(order);
-        // pobrać koszyka
-        saveOrderRows(cart, newOrder.getId());
+        saveOrderRows(cart, newOrder.getId(), shipment);
+
+
         // usunąć koszyk
         cartItemRepository.deleteByCartId(orderDTO.getCartId());
         cartRepository.deleteCartById(orderDTO.getCartId());
@@ -60,17 +65,32 @@ public class OrderService {
                 .build();
     }
 
-    private BigDecimal calculateGrossValue(List<CartItem> items) {
+    private BigDecimal calculateGrossValue(List<CartItem> items, Shipment shipment) {
         return items.stream()
                 .map(cartItem -> cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                 .reduce(BigDecimal::add)
-                .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO)
+                .add(shipment.getPrice());
     }
 
-    private void saveOrderRows(Cart cart, Long id) {
+    private void saveOrderRows(Cart cart, Long orderId, Shipment shipment) {
+        saveProductRows(cart, orderId);
+        saveShipmentRow(orderId, shipment);
+    }
+
+    private void saveShipmentRow(Long orderId, Shipment shipment) {
+        orderRowRepository.save(OrderRow.builder()
+                .quantity(1)
+                .price(shipment.getPrice())
+                .shipmentId(shipment.getId())
+                .orderId(orderId)
+                .build());
+    }
+
+    private void saveProductRows(Cart cart, Long orderId) {
         cart.getItems().stream()
                 .map(cartItem -> OrderRow.builder()
-                        .orderId(id)
+                        .orderId(orderId)
                         .quantity(cartItem.getQuantity())
                         .productId(cartItem.getProduct().getId())
                         .price(cartItem.getProduct().getPrice())
