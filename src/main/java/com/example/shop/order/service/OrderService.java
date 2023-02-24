@@ -7,11 +7,13 @@ import com.example.shop.common.repository.CartRepository;
 import com.example.shop.order.model.Order;
 import com.example.shop.order.model.OrderRow;
 import com.example.shop.order.model.OrderStatus;
+import com.example.shop.order.model.Payment;
 import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;
 import com.example.shop.order.model.dto.OrderSummary;
 import com.example.shop.order.repository.OrderRepository;
 import com.example.shop.order.repository.OrderRowRepository;
+import com.example.shop.order.repository.PaymentRepository;
 import com.example.shop.order.repository.ShipmentRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,11 +33,14 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ShipmentRepository shipmentRepository;
 
+    private final PaymentRepository paymentRepository;
+
     @Transactional
     public OrderSummary placeOrder(OrderDTO orderDTO) {
         // stworzenie zamówienia z wierszami
         Cart cart = cartRepository.findById(orderDTO.getCartId()).orElseThrow();
         Shipment shipment = shipmentRepository.findById(orderDTO.getShipmentId()).orElseThrow();
+        Payment payment = paymentRepository.findById(orderDTO.getPaymentId()).orElseThrow();
         Order order = Order.builder()
                 .firstname(orderDTO.getFirstname())
                 .lastname(orderDTO.getLastname())
@@ -47,6 +52,7 @@ public class OrderService {
                 .placeDate(LocalDateTime.now())
                 .orderStatus(OrderStatus.NEW)
                 .grossValue(calculateGrossValue(cart.getItems(), shipment))
+                .payment(payment)
                 .build();
         // zapisać zamówienie
         Order newOrder = orderRepository.save(order);
@@ -62,6 +68,7 @@ public class OrderService {
                 .placeDate(newOrder.getPlaceDate())
                 .status(newOrder.getOrderStatus())
                 .grossValue(newOrder.getGrossValue())
+                .payment(payment)
                 .build();
     }
 
