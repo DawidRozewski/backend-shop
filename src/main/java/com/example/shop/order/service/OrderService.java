@@ -2,12 +2,9 @@ package com.example.shop.order.service;
 
 import com.example.shop.common.mail.EmailClientService;
 import com.example.shop.common.model.Cart;
-import com.example.shop.common.model.CartItem;
 import com.example.shop.common.repository.CartItemRepository;
 import com.example.shop.common.repository.CartRepository;
 import com.example.shop.order.model.Order;
-import com.example.shop.order.model.OrderRow;
-import com.example.shop.order.model.OrderStatus;
 import com.example.shop.order.model.Payment;
 import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;
@@ -21,10 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+import static com.example.shop.order.service.mapper.OrderEmailMessage.createEmailMessage;
+import static com.example.shop.order.service.mapper.OrderMapper.createNewOrder;
+import static com.example.shop.order.service.mapper.OrderMapper.createOrderSummary;
+import static com.example.shop.order.service.mapper.OrderMapper.mapToOrderRow;
+import static com.example.shop.order.service.mapper.OrderMapper.mapToOrderRowWithQuantity;
 
 @Service
 @AllArgsConstructor
@@ -36,69 +34,31 @@ public class OrderService {
     private final OrderRowRepository orderRowRepository;
     private final CartItemRepository cartItemRepository;
     private final ShipmentRepository shipmentRepository;
-
     private final PaymentRepository paymentRepository;
-
     private final EmailClientService emailClientService;
 
     @Transactional
     public OrderSummary placeOrder(OrderDTO orderDTO) {
-        // stworzenie zamówienia z wierszami
         Cart cart = cartRepository.findById(orderDTO.getCartId()).orElseThrow();
         Shipment shipment = shipmentRepository.findById(orderDTO.getShipmentId()).orElseThrow();
         Payment payment = paymentRepository.findById(orderDTO.getPaymentId()).orElseThrow();
-        Order order = Order.builder()
-                .firstname(orderDTO.getFirstname())
-                .lastname(orderDTO.getLastname())
-                .street(orderDTO.getStreet())
-                .zipcode(orderDTO.getZipcode())
-                .city(orderDTO.getCity())
-                .email(orderDTO.getEmail())
-                .phone(orderDTO.getPhone())
-                .placeDate(LocalDateTime.now())
-                .orderStatus(OrderStatus.NEW)
-                .grossValue(calculateGrossValue(cart.getItems(), shipment))
-                .payment(payment)
-                .build();
-        // zapisać zamówienie
-        Order newOrder = orderRepository.save(order);
+        Order newOrder = orderRepository.save(createNewOrder(orderDTO, cart, shipment, payment));
         saveOrderRows(cart, newOrder.getId(), shipment);
+        clearOrderCart(orderDTO);
+        sendConfirmEmail(newOrder);
+        return createOrderSummary(payment, newOrder);
+    }
 
+    private void sendConfirmEmail(Order newOrder) {
+        emailClientService.getInstance()
+                .send(newOrder.getEmail(),
+                        "Twoje zamówienie zostało przyjęte",
+                        createEmailMessage(newOrder));
+    }
 
-        // usunąć koszyk
+    private void clearOrderCart(OrderDTO orderDTO) {
         cartItemRepository.deleteByCartId(orderDTO.getCartId());
         cartRepository.deleteCartById(orderDTO.getCartId());
-
-        // wyślij maila
-        log.info("Zamówienie złożone");
-        emailClientService.getInstance().send(order.getEmail(), "Twoje zamówienie zostało przyjęte", createEmailMessage(order));
-
-        // zwrócic podsumowanie
-        return OrderSummary.builder()
-                .id(newOrder.getId())
-                .placeDate(newOrder.getPlaceDate())
-                .status(newOrder.getOrderStatus())
-                .grossValue(newOrder.getGrossValue())
-                .payment(payment)
-                .build();
-    }
-
-    private String createEmailMessage(Order order) {
-        return "Twoje zamówienie o id: " + order.getId() +
-                "\nData założenia: " + order.getPlaceDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) +
-                "\nWartość: " + order.getGrossValue() + " PLN " +
-                "\n\n" +
-                "\nPłatność: " + order.getPayment().getName() +
-                (order.getPayment().getNote() != null ? "\n" + order.getPayment().getNote() : "") +
-                "\n\nDziękujemy za zakupy.";
-    }
-
-    private BigDecimal calculateGrossValue(List<CartItem> items, Shipment shipment) {
-        return items.stream()
-                .map(cartItem -> cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
-                .reduce(BigDecimal::add)
-                .orElse(BigDecimal.ZERO)
-                .add(shipment.getPrice());
     }
 
     private void saveOrderRows(Cart cart, Long orderId, Shipment shipment) {
@@ -107,22 +67,12 @@ public class OrderService {
     }
 
     private void saveShipmentRow(Long orderId, Shipment shipment) {
-        orderRowRepository.save(OrderRow.builder()
-                .quantity(1)
-                .price(shipment.getPrice())
-                .shipmentId(shipment.getId())
-                .orderId(orderId)
-                .build());
+        orderRowRepository.save(mapToOrderRow(orderId, shipment));
     }
 
     private void saveProductRows(Cart cart, Long orderId) {
         cart.getItems().stream()
-                .map(cartItem -> OrderRow.builder()
-                        .orderId(orderId)
-                        .quantity(cartItem.getQuantity())
-                        .productId(cartItem.getProduct().getId())
-                        .price(cartItem.getProduct().getPrice())
-                        .build()
+                .map(cartItem -> mapToOrderRowWithQuantity(orderId, cartItem)
                 )
                 .peek(orderRowRepository::save)
                 .toList();
