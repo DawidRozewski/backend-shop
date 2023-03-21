@@ -8,6 +8,6 @@ import java.util.List;
 @Getter
 @Builder
 public class InitOrder {
-    private List<Shipment> shipments;
-    private List<Payment> payments;
+    private List<Shipment> shipment;
+    private List<Payment> payment;
 }

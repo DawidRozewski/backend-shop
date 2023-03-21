@@ -1,5 +1,6 @@
 package com.example.shop.order.controller;
 
+import com.example.shop.common.mail.EmailSimpleService;
 import com.example.shop.order.model.InitOrder;
 import com.example.shop.order.model.dto.OrderDTO;
 import com.example.shop.order.model.dto.OrderSummary;
@@ -22,6 +23,8 @@ public class OrderController {
     private final ShipmentService shipmentService;
     private final PaymentService paymentService;
 
+    private final EmailSimpleService emailSimpleService;
+
     @PostMapping
     public OrderSummary placeOrder(@RequestBody OrderDTO orderDTO) {
         return orderService.placeOrder(orderDTO);
@@ -30,9 +33,10 @@ public class OrderController {
     @GetMapping("/initData")
     public InitOrder initData() {
         return InitOrder.builder()
-                .shipments(shipmentService.getShipments())
-                .payments(paymentService.getPayments())
+                .shipment(shipmentService.getShipments())
+                .payment(paymentService.getPayments())
                 .build();
     }
+
 
 }
