@@ -1,8 +1,8 @@
 package com.example.shop.admin.order.service;
 
-import com.example.shop.admin.order.model.AdminOrder;
-import com.example.shop.admin.order.model.AdminOrderLog;
-import com.example.shop.admin.order.model.AdminOrderStatus;
+import com.example.shop.admin.order.controller.model.AdminOrder;
+import com.example.shop.admin.order.controller.model.AdminOrderLog;
+import com.example.shop.admin.order.controller.model.AdminOrderStatus;
 import com.example.shop.admin.order.repository.AdminOrderLogRepository;
 import com.example.shop.admin.order.repository.AdminOrderRepository;
 import lombok.RequiredArgsConstructor;

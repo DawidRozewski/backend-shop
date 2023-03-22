@@ -1,7 +1,7 @@
 package com.example.shop.admin.order.service;
 
-import com.example.shop.admin.order.model.AdminOrder;
-import com.example.shop.admin.order.model.AdminOrderStatus;
+import com.example.shop.admin.order.controller.model.AdminOrder;
+import com.example.shop.admin.order.controller.model.AdminOrderStatus;
 import com.example.shop.common.mail.EmailClientService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

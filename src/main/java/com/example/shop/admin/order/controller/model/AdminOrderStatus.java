@@ -1,4 +1,4 @@
-package com.example.shop.admin.order.model;
+package com.example.shop.admin.order.controller.model;
 
 public enum AdminOrderStatus {
     NEW("Nowe"),

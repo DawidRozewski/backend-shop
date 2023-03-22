@@ -1,7 +1,7 @@
 package com.example.shop.admin.order.controller.mapper;
 
 import com.example.shop.admin.order.controller.dto.AdminOrderDto;
-import com.example.shop.admin.order.model.AdminOrder;
+import com.example.shop.admin.order.controller.model.AdminOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 

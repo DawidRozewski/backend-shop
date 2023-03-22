@@ -1,6 +1,6 @@
 package com.example.shop.admin.order.controller.dto;
 
-import com.example.shop.admin.order.model.AdminOrderStatus;
+import com.example.shop.admin.order.controller.model.AdminOrderStatus;
 import lombok.Builder;
 import lombok.Getter;
 
