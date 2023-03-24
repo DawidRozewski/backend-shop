@@ -1,5 +1,6 @@
 package com.example.shop.security;
 
+import com.example.shop.security.model.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +10,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
-
 @Configuration
 public class SecurityConfig {
 
@@ -24,7 +24,7 @@ public class SecurityConfig {
                                            AuthenticationManager authenticationManager,
                                            UserDetailsService userDetailsService) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
-                .antMatchers("/admin/**").authenticated()
+                .antMatchers("/admin/**").hasRole(UserRole.ROLE_ADMIN.getRole())
                 .anyRequest().permitAll());
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -36,9 +36,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-//
-//    @Bean
-//    public UserDetailsService userDetailsService(DataSource dataSource) {
-//        return new JdbcUserDetailsManager((javax.sql.DataSource) dataSource);
-//    }
+
 }
