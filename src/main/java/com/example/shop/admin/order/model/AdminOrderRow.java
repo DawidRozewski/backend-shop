@@ -1,4 +1,4 @@
-package com.example.shop.admin.order.controller.model;
+package com.example.shop.admin.order.model;
 
 import com.example.shop.admin.product.model.AdminProduct;
 import com.example.shop.order.model.Shipment;

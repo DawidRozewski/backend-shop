@@ -1,6 +1,6 @@
 package com.example.shop.admin.order.controller;
 
-import com.example.shop.admin.order.controller.model.dto.AdminOrderStats;
+import com.example.shop.admin.order.model.dto.AdminOrderStats;
 import com.example.shop.admin.order.service.AdminOrderStatsService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

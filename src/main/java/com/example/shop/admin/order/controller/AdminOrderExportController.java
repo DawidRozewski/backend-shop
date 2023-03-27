@@ -1,9 +1,9 @@
 package com.example.shop.admin.order.controller;
 
 
-import com.example.shop.admin.order.controller.model.AdminOrder;
-import com.example.shop.admin.order.controller.model.AdminOrderStatus;
+import com.example.shop.admin.order.model.AdminOrder;
 import com.example.shop.admin.order.service.AdminExportService;
+import com.example.shop.common.model.OrderStatus;
 import lombok.AllArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -45,7 +45,7 @@ public class AdminOrderExportController {
     public ResponseEntity<Resource> exportOrders(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate to,
-            @RequestParam AdminOrderStatus orderStatus
+            @RequestParam OrderStatus orderStatus
     ) {
         List<AdminOrder> adminOrders = adminExportService.exportOrders(
                 LocalDateTime.of(from, LocalTime.of(0, 0, 0)),

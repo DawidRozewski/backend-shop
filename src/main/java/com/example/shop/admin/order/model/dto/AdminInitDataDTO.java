@@ -1,4 +1,4 @@
-package com.example.shop.admin.order.controller.dto;
+package com.example.shop.admin.order.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

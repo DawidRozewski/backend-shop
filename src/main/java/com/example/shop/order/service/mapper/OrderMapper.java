@@ -2,9 +2,9 @@ package com.example.shop.order.service.mapper;
 
 import com.example.shop.common.model.Cart;
 import com.example.shop.common.model.CartItem;
+import com.example.shop.common.model.OrderStatus;
 import com.example.shop.order.model.Order;
 import com.example.shop.order.model.OrderRow;
-import com.example.shop.order.model.OrderStatus;
 import com.example.shop.order.model.Payment;
 import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;

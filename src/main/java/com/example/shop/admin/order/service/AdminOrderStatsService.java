@@ -1,9 +1,9 @@
 package com.example.shop.admin.order.service;
 
-import com.example.shop.admin.order.controller.model.AdminOrder;
-import com.example.shop.admin.order.controller.model.AdminOrderStatus;
-import com.example.shop.admin.order.controller.model.dto.AdminOrderStats;
+import com.example.shop.admin.order.model.AdminOrder;
+import com.example.shop.admin.order.model.dto.AdminOrderStats;
 import com.example.shop.admin.order.repository.AdminOrderRepository;
+import com.example.shop.common.model.OrderStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ public class AdminOrderStatsService {
         List<AdminOrder> orders = orderRepository.findAllByPlaceDateIsBetweenAndOrderStatus(
                 from,
                 to,
-                AdminOrderStatus.COMPLETED
+                OrderStatus.COMPLETED
         );
 
         TreeMap<Integer, AdminOrdersStatsValue> result = new TreeMap<>();

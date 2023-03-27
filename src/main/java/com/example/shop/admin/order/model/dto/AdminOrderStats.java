@@ -1,4 +1,4 @@
-package com.example.shop.admin.order.controller.model.dto;
+package com.example.shop.admin.order.model.dto;
 
 import lombok.Builder;
 import lombok.Getter;

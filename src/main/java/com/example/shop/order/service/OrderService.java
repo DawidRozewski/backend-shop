@@ -8,6 +8,7 @@ import com.example.shop.order.model.Order;
 import com.example.shop.order.model.Payment;
 import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;
+import com.example.shop.order.model.dto.OrderListDTO;
 import com.example.shop.order.model.dto.OrderSummary;
 import com.example.shop.order.repository.OrderRepository;
 import com.example.shop.order.repository.OrderRowRepository;
@@ -18,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+import static com.example.shop.order.service.mapper.OrderDTOMapper.mapToOrderListDTO;
 import static com.example.shop.order.service.mapper.OrderEmailMessage.createEmailMessage;
 import static com.example.shop.order.service.mapper.OrderMapper.createNewOrder;
 import static com.example.shop.order.service.mapper.OrderMapper.createOrderSummary;
@@ -76,5 +80,9 @@ public class OrderService {
                 )
                 .peek(orderRowRepository::save)
                 .toList();
+    }
+
+    public List<OrderListDTO> getOrdersForCustomer(Long userId) {
+        return mapToOrderListDTO(orderRepository.findByUserId(userId));
     }
 }

@@ -1,11 +1,11 @@
 package com.example.shop.admin.order.controller;
 
-import com.example.shop.admin.order.controller.dto.AdminInitDataDTO;
-import com.example.shop.admin.order.controller.dto.AdminOrderDto;
 import com.example.shop.admin.order.controller.mapper.AdminOrderMapper;
-import com.example.shop.admin.order.controller.model.AdminOrder;
-import com.example.shop.admin.order.controller.model.AdminOrderStatus;
+import com.example.shop.admin.order.model.AdminOrder;
+import com.example.shop.admin.order.model.dto.AdminInitDataDTO;
+import com.example.shop.admin.order.model.dto.AdminOrderDto;
 import com.example.shop.admin.order.service.AdminOrderService;
+import com.example.shop.common.model.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +48,7 @@ public class AdminOrderController {
 
     private Map<String, String> createOrderStatusesMap() {
         HashMap<String, String> statuses = new HashMap<>();
-        for (AdminOrderStatus value : AdminOrderStatus.values()) {
+        for (OrderStatus value : OrderStatus.values()) {
             statuses.put(value.name(), value.getValue());
         }
         return statuses;

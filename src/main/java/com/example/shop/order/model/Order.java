@@ -1,5 +1,6 @@
 package com.example.shop.order.model;
 
+import com.example.shop.common.model.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

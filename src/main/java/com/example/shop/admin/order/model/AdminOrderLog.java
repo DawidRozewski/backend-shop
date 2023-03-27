@@ -1,4 +1,4 @@
-package com.example.shop.admin.order.controller.model;
+package com.example.shop.admin.order.model;
 
 
 import lombok.AllArgsConstructor;

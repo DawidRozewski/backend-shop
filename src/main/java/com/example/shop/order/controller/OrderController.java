@@ -3,6 +3,7 @@ package com.example.shop.order.controller;
 import com.example.shop.common.mail.EmailSimpleService;
 import com.example.shop.order.model.InitOrder;
 import com.example.shop.order.model.dto.OrderDTO;
+import com.example.shop.order.model.dto.OrderListDTO;
 import com.example.shop.order.model.dto.OrderSummary;
 import com.example.shop.order.service.OrderService;
 import com.example.shop.order.service.PaymentService;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -39,6 +42,14 @@ public class OrderController {
                 .shipment(shipmentService.getShipments())
                 .payment(paymentService.getPayments())
                 .build();
+    }
+
+    @GetMapping
+    public List<OrderListDTO> getOrders(@AuthenticationPrincipal Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User is missing");
+        }
+        return orderService.getOrdersForCustomer(userId);
     }
 
 
