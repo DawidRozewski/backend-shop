@@ -8,6 +8,7 @@ import com.example.shop.order.service.OrderService;
 import com.example.shop.order.service.PaymentService;
 import com.example.shop.order.service.ShipmentService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +27,10 @@ public class OrderController {
     private final EmailSimpleService emailSimpleService;
 
     @PostMapping
-    public OrderSummary placeOrder(@RequestBody OrderDTO orderDTO) {
-        return orderService.placeOrder(orderDTO);
+    public OrderSummary placeOrder(
+            @RequestBody OrderDTO orderDTO,
+            @AuthenticationPrincipal Long userId) {
+        return orderService.placeOrder(orderDTO, userId);
     }
 
     @GetMapping("/initData")

@@ -2,10 +2,10 @@ package com.example.shop.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.shop.security.model.ShopUserDetails;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -49,8 +49,8 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                     .verify(token.replace(TOKEN_PREFIX, ""))
                     .getSubject();
             if (userName != null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
-                return new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities());
+                ShopUserDetails userDetails = (ShopUserDetails) userDetailsService.loadUserByUsername(userName);
+                return new UsernamePasswordAuthenticationToken(userDetails.getId(), null, userDetails.getAuthorities());
             }
         }
         return null;

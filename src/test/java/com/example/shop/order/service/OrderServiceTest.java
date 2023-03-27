@@ -72,8 +72,9 @@ class OrderServiceTest {
             return argument;
         });
         when(emailClientService.getInstance()).thenReturn(new FakeEmailService());
+        Long userId = 1L;
         //when
-        OrderSummary orderSummary = orderService.placeOrder(orderDTO);
+        OrderSummary orderSummary = orderService.placeOrder(orderDTO, userId);
         //then
         assertThat(orderSummary).isNotNull();
         assertThat(orderSummary.getStatus()).isEqualTo(OrderStatus.NEW);
