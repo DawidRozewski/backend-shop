@@ -46,9 +46,6 @@ public class OrderController {
 
     @GetMapping
     public List<OrderListDTO> getOrders(@AuthenticationPrincipal Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User is missing");
-        }
         return orderService.getOrdersForCustomer(userId);
     }
 

@@ -1,4 +1,4 @@
-package com.example.shop.security;
+package com.example.shop.security.controller;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

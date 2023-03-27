@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -16,12 +17,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.Email;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,6 +33,7 @@ public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Email
     private String username;
     private String password;
     private boolean enabled;
@@ -37,4 +42,7 @@ public class User implements Serializable {
     @Column(name = "authority")
     @Enumerated(EnumType.STRING)
     private List<UserRole> authorities;
+    private String hash;
+    private LocalDateTime HashDate;
+
 }
