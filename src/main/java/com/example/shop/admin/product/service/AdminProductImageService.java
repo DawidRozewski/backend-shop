@@ -23,6 +23,14 @@ public class AdminProductImageService {
         String newFileName = SlugifyUtils.slugifyFileName(filename);
         newFileName = ExistingFileRenameUtils.renameIfExist(Path.of(uploadDir), newFileName);
 
+        if (!Files.exists(Path.of(uploadDir))) {
+            try {
+                Files.createDirectory(Path.of(uploadDir));
+            } catch (IOException e) {
+                throw new RuntimeException("Nie mogę zapisać katalogu", e);
+            }
+        }
+
         Path filePath = Paths.get(uploadDir).resolve(newFileName);
         try (OutputStream outputStream = Files.newOutputStream(filePath)) {
             inputStream.transferTo(outputStream);
