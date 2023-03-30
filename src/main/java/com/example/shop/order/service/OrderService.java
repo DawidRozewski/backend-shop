@@ -6,6 +6,7 @@ import com.example.shop.common.repository.CartItemRepository;
 import com.example.shop.common.repository.CartRepository;
 import com.example.shop.order.model.Order;
 import com.example.shop.order.model.Payment;
+import com.example.shop.order.model.PaymentType;
 import com.example.shop.order.model.Shipment;
 import com.example.shop.order.model.dto.OrderDTO;
 import com.example.shop.order.model.dto.OrderListDTO;
@@ -14,6 +15,7 @@ import com.example.shop.order.repository.OrderRepository;
 import com.example.shop.order.repository.OrderRowRepository;
 import com.example.shop.order.repository.PaymentRepository;
 import com.example.shop.order.repository.ShipmentRepository;
+import com.example.shop.order.service.payment.p24.PaymentMethodP24;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class OrderService {
     private final ShipmentRepository shipmentRepository;
     private final PaymentRepository paymentRepository;
     private final EmailClientService emailClientService;
+    private final PaymentMethodP24 paymentMethodP24;
 
     @Transactional
     public OrderSummary placeOrder(OrderDTO orderDTO, Long userId) {
@@ -50,7 +53,15 @@ public class OrderService {
         saveOrderRows(cart, newOrder.getId(), shipment);
         clearOrderCart(orderDTO);
         sendConfirmEmail(newOrder);
-        return createOrderSummary(payment, newOrder);
+        String redirectUrl = initPaymentIfNeeded(newOrder);
+        return createOrderSummary(payment, newOrder, redirectUrl);
+    }
+
+    private String initPaymentIfNeeded(Order newOrder) {
+        if (newOrder.getPayment().getType() == PaymentType.P24_ONLINE) {
+            return paymentMethodP24.initPayment(newOrder);
+        }
+        return null;
     }
 
     private void sendConfirmEmail(Order newOrder) {
