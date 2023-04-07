@@ -1,6 +1,7 @@
 package com.example.shop.order.service.payment.p24;
 
 import com.example.shop.order.model.Order;
+import com.example.shop.order.model.dto.NotificationReceiveDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 @Service
 @Slf4j
@@ -39,7 +42,8 @@ public class PaymentMethodP24 {
                         .client(newOrder.getFirstname() + " " + newOrder.getLastname())
                         .country("PL")
                         .language("pl")
-                        .urlReturn(config.isTestMode() ? config.getTestUrlReturn() : config.getUrlReturn())
+                        .urlReturn(generateReturnUrl(newOrder.getOrderHash()))
+                        .urlStatus(generateStatusUrl(newOrder.getOrderHash()))
                         .sign(createSign(newOrder))
                         .encoding("UTF-8")
                         .build())
@@ -59,6 +63,16 @@ public class PaymentMethodP24 {
         return null;
     }
 
+    private String generateStatusUrl(String orderHash) {
+        String baseUrl = config.isTestMode() ? config.getTestUrlStatus() : config.getUrlStatus();
+        return baseUrl + "/orders/notification/" + orderHash;
+    }
+
+    private String generateReturnUrl(String orderHash) {
+        String baseUrl = config.isTestMode() ? config.getTestUrlReturn() : config.getUrlReturn();
+        return baseUrl + "/order/notification/" + orderHash;
+    }
+
     private String createSign(Order newOrder) {
         String json = "{\"sessionId\":\"" + createSessionId(newOrder) +
                 "\",\"merchantId\":" + config.getMerchantId() +
@@ -69,5 +83,74 @@ public class PaymentMethodP24 {
 
     private String createSessionId(Order newOrder) {
         return "order_id_" + newOrder.getId().toString();
+    }
+
+    public String receiveNotification(Order order, NotificationReceiveDTO receiveDTO) {
+        log.info(receiveDTO.toString());
+        validate(receiveDTO, order);
+        return verifyPayment(receiveDTO, order);
+    }
+
+    private String verifyPayment(NotificationReceiveDTO receiveDTO, Order order) {
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(
+                        config.getPosId().toString(),
+                        config.isTestMode() ? config.getTestSecretKey() : config.getSecretKey()))
+                .baseUrl(config.isTestMode() ? config.getTestApiUrl() : config.getApiUrl())
+                .build();
+        ResponseEntity<TransactionVerifyResponse> result = webClient.put().uri("/transaction/verify")
+                .bodyValue(TransactionVerifyRequest.builder()
+                        .merchantId(config.getMerchantId())
+                        .posId(config.getPosId())
+                        .sessionId(createSessionId(order))
+                        .amount(order.getGrossValue().movePointRight(2).intValue())
+                        .currency("PLN")
+                        .orderId(receiveDTO.getOrderId())
+                        .sign(createVerifySign(receiveDTO, order))
+                        .build())
+                .retrieve()
+                .toEntity(TransactionVerifyResponse.class)
+                .block();
+        log.info("Verification status transaction " + result.getBody().getData().status());
+        return result.getBody().getData().status();
+    }
+
+    private String createVerifySign(NotificationReceiveDTO receiveDTO, Order order) {
+        String json = "{\"sessionId\":\"" + createSessionId(order) +
+                "\",\"orderId\":" + receiveDTO.getOrderId() +
+                ",\"amount\":" + order.getGrossValue().movePointRight(2).intValue() +
+                ",\"currency\":\"PLN\",\"crc\":\"" + (config.isTestMode() ? config.getTestCrc() : config.getCrc()) + "\"}";
+        return DigestUtils.sha384Hex(json);
+    }
+
+    private void validate(NotificationReceiveDTO receiveDTO, Order order) {
+        validateField(config.getMerchantId().equals(receiveDTO.getMerchantId()));
+        validateField(config.getPosId().equals(receiveDTO.getPosId()));
+        validateField(createSessionId(order).equals(receiveDTO.getSessionId()));
+        validateField(order.getGrossValue().compareTo(BigDecimal.valueOf(receiveDTO.getAmount()).movePointLeft(2)) == 0);
+        validateField(order.getGrossValue().compareTo(BigDecimal.valueOf(receiveDTO.getOriginAmount()).movePointLeft(2)) == 0);
+        validateField("PLN".equals(receiveDTO.getCurrency()));
+        validateField(createReceivedSign(receiveDTO, order).equals(receiveDTO.getSign()));
+    }
+
+    private String createReceivedSign(NotificationReceiveDTO receiveDTO, Order order) {
+        String json = "{\"merchantId\":" + config.getMerchantId() +
+                ",\"posId\":" + config.getPosId() +
+                ",\"sessionId\":\"" + createSessionId(order) +
+                "\",\"amount\":" + order.getGrossValue().movePointRight(2).intValue() +
+                ",\"originAmount\":" + order.getGrossValue().movePointRight(2).intValue() +
+                ",\"currency\":\"PLN\"" +
+                ",\"orderId\":" + receiveDTO.getOrderId() +
+                ",\"methodId\":" + receiveDTO.getMethodId() +
+                ",\"statement\":\"" + receiveDTO.getStatement() +
+                "\",\"crc\":\"" + (config.isTestMode() ? config.getTestCrc() : config.getCrc()) + "\"}";
+
+        return DigestUtils.sha384Hex(json);
+    }
+
+    private void validateField(boolean condition) {
+        if (!condition) {
+            throw new RuntimeException("Validation failed");
+        }
     }
 }

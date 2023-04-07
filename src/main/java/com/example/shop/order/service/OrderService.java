@@ -2,15 +2,19 @@ package com.example.shop.order.service;
 
 import com.example.shop.common.mail.EmailClientService;
 import com.example.shop.common.model.Cart;
+import com.example.shop.common.model.OrderStatus;
 import com.example.shop.common.repository.CartItemRepository;
 import com.example.shop.common.repository.CartRepository;
 import com.example.shop.order.model.Order;
+import com.example.shop.order.model.OrderLog;
 import com.example.shop.order.model.Payment;
 import com.example.shop.order.model.PaymentType;
 import com.example.shop.order.model.Shipment;
+import com.example.shop.order.model.dto.NotificationReceiveDTO;
 import com.example.shop.order.model.dto.OrderDTO;
 import com.example.shop.order.model.dto.OrderListDTO;
 import com.example.shop.order.model.dto.OrderSummary;
+import com.example.shop.order.repository.OrderLogRepository;
 import com.example.shop.order.repository.OrderRepository;
 import com.example.shop.order.repository.OrderRowRepository;
 import com.example.shop.order.repository.PaymentRepository;
@@ -21,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.example.shop.order.service.mapper.OrderDTOMapper.mapToOrderListDTO;
@@ -43,6 +48,7 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final EmailClientService emailClientService;
     private final PaymentMethodP24 paymentMethodP24;
+    private final OrderLogRepository orderLogRepository;
 
     @Transactional
     public OrderSummary placeOrder(OrderDTO orderDTO, Long userId) {
@@ -95,5 +101,25 @@ public class OrderService {
 
     public List<OrderListDTO> getOrdersForCustomer(Long userId) {
         return mapToOrderListDTO(orderRepository.findByUserId(userId));
+    }
+
+    public Order getOrderByOrderHash(String orderHash) {
+        return orderRepository.findByOrderHash(orderHash).orElseThrow();
+    }
+
+    @Transactional
+    public void receiveNotification(String orderHash, NotificationReceiveDTO receiveDTO) {
+        Order order = getOrderByOrderHash(orderHash);
+        String status = paymentMethodP24.receiveNotification(order, receiveDTO);
+        if (status.equals("success")) {
+            OrderStatus oldStatus = order.getOrderStatus();
+            order.setOrderStatus(OrderStatus.PAID);
+            orderLogRepository.save(OrderLog.builder()
+                    .created(LocalDateTime.now())
+                    .orderId(order.getId())
+                    .note("Opłacono zamówienie przez Przelewy24. Id płatności:: " + receiveDTO.getStatement() +
+                            " ::, zmieniono status z :: " + oldStatus + " :: na :: " + order.getOrderStatus().getValue())
+                    .build());
+        }
     }
 }

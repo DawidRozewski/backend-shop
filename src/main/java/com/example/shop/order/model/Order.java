@@ -24,6 +24,7 @@ import java.util.List;
 @Entity
 @Table(name = "`order`")
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,4 +50,6 @@ public class Order {
     @OneToOne
     private Payment payment;
     private Long userId;
+    private String orderHash;
+
 }
