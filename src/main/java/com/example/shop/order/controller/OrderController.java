@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -66,7 +67,9 @@ public class OrderController {
 
     @PostMapping("/notification/{orderHash}")
     public void notificationReceive(@PathVariable @Length(max = 12) String orderHash,
-                                    @RequestBody NotificationReceiveDTO receiveDTO) {
-        orderService.receiveNotification(orderHash, receiveDTO);
+                                    @RequestBody NotificationReceiveDTO receiveDTO,
+                                    HttpServletRequest request
+    ) {
+        orderService.receiveNotification(orderHash, receiveDTO, request.getRemoteAddr());
     }
 }

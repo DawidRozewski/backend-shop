@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+
 @Configuration
 @Getter
 @Setter
@@ -30,6 +32,8 @@ public class PaymentMethodP24Config {
     private String testUrlStatus;
     private String testCrc;
     private String testSecretKey;
+
+    private List<String> servers;
 
     @Bean
     public WebClient p24Client() {

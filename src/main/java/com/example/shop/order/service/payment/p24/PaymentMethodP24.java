@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import static com.example.shop.order.service.payment.p24.RequestUtil.createRegisterRequest;
 import static com.example.shop.order.service.payment.p24.RequestUtil.createVerifyRequest;
 import static com.example.shop.order.service.payment.p24.RequestUtil.validate;
+import static com.example.shop.order.service.payment.p24.RequestUtil.validateIpAddress;
 
 @Service
 @Slf4j
@@ -44,8 +45,9 @@ public class PaymentMethodP24 {
         return null;
     }
 
-    public String receiveNotification(Order order, NotificationReceiveDTO receiveDTO) {
+    public String receiveNotification(Order order, NotificationReceiveDTO receiveDTO, String remoteAddr) {
         log.info(receiveDTO.toString());
+        validateIpAddress(remoteAddr, config);
         validate(receiveDTO, order, config);
         return verifyPayment(receiveDTO, order);
     }

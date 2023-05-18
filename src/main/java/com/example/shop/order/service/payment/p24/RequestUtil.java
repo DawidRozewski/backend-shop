@@ -103,4 +103,12 @@ public class RequestUtil {
             throw new RuntimeException("Validation failed");
         }
     }
+
+
+    static void validateIpAddress(String remoteAddr, PaymentMethodP24Config config) {
+        if (config.getServers().contains(remoteAddr)) {
+            throw new RuntimeException("Invalid IP address ");
+        }
+    }
+
 }
