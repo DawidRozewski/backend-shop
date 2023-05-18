@@ -4,14 +4,15 @@ import com.example.shop.order.model.Order;
 import com.example.shop.order.model.dto.NotificationReceiveDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
+import static com.example.shop.order.service.payment.p24.RequestUtil.createRegisterRequest;
+import static com.example.shop.order.service.payment.p24.RequestUtil.createVerifyRequest;
+import static com.example.shop.order.service.payment.p24.RequestUtil.validate;
 
 @Service
 @Slf4j
@@ -19,39 +20,19 @@ import java.math.BigDecimal;
 public class PaymentMethodP24 {
 
     private final PaymentMethodP24Config config;
+    private final WebClient p24Client;
 
     public String initPayment(Order newOrder) {
         log.info("Payment initialization");
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(
-                        config.getPosId().toString(),
-                        config.isTestMode() ? config.getTestSecretKey() : config.getSecretKey()))
-                .baseUrl(config.isTestMode() ? config.getTestApiUrl() : config.getApiUrl())
-                .build();
 
-
-        ResponseEntity<TransactionRegisterResponse> result = webClient.post().uri("/transaction/register")
-                .bodyValue(TransactionRegisterRequest.builder()
-                        .merchantId(config.getMerchantId())
-                        .posId(config.getPosId())
-                        .sessionId(createSessionId(newOrder))
-                        .amount(newOrder.getGrossValue().movePointRight(2).intValue())
-                        .currency("PLN")
-                        .description("Zamówienie id:" + newOrder.getId())
-                        .email(newOrder.getEmail())
-                        .client(newOrder.getFirstname() + " " + newOrder.getLastname())
-                        .country("PL")
-                        .language("pl")
-                        .urlReturn(generateReturnUrl(newOrder.getOrderHash()))
-                        .urlStatus(generateStatusUrl(newOrder.getOrderHash()))
-                        .sign(createSign(newOrder))
-                        .encoding("UTF-8")
-                        .build())
+        ResponseEntity<TransactionRegisterResponse> result = p24Client.post().uri("/transaction/register")
+                .bodyValue(createRegisterRequest(config, newOrder))
                 .retrieve()
-                .onStatus(httpStatus -> {
-                    log.error("Something went wrong: " + httpStatus.name());
-                    return httpStatus.is4xxClientError();
-                }, clientResponse -> Mono.empty())
+                .onStatus(HttpStatus::is4xxClientError,
+                        clientResponse -> {
+                            log.error("Something went wrong: " + clientResponse.statusCode().name());
+                            return Mono.empty();
+                        })
                 .toEntity(TransactionRegisterResponse.class)
                 .block();
         if (result != null &&
@@ -63,51 +44,15 @@ public class PaymentMethodP24 {
         return null;
     }
 
-    private String generateStatusUrl(String orderHash) {
-        String baseUrl = config.isTestMode() ? config.getTestUrlStatus() : config.getUrlStatus();
-        return baseUrl + "/orders/notification/" + orderHash;
-    }
-
-    private String generateReturnUrl(String orderHash) {
-        String baseUrl = config.isTestMode() ? config.getTestUrlReturn() : config.getUrlReturn();
-        return baseUrl + "/order/notification/" + orderHash;
-    }
-
-    private String createSign(Order newOrder) {
-        String json = "{\"sessionId\":\"" + createSessionId(newOrder) +
-                "\",\"merchantId\":" + config.getMerchantId() +
-                ",\"amount\":" + newOrder.getGrossValue().movePointRight(2).intValue() +
-                ",\"currency\":\"PLN\",\"crc\":\"" + (config.isTestMode() ? config.getTestCrc() : config.getCrc()) + "\"}";
-        return DigestUtils.sha384Hex(json);
-    }
-
-    private String createSessionId(Order newOrder) {
-        return "order_id_" + newOrder.getId().toString();
-    }
-
     public String receiveNotification(Order order, NotificationReceiveDTO receiveDTO) {
         log.info(receiveDTO.toString());
-        validate(receiveDTO, order);
+        validate(receiveDTO, order, config);
         return verifyPayment(receiveDTO, order);
     }
 
     private String verifyPayment(NotificationReceiveDTO receiveDTO, Order order) {
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(
-                        config.getPosId().toString(),
-                        config.isTestMode() ? config.getTestSecretKey() : config.getSecretKey()))
-                .baseUrl(config.isTestMode() ? config.getTestApiUrl() : config.getApiUrl())
-                .build();
-        ResponseEntity<TransactionVerifyResponse> result = webClient.put().uri("/transaction/verify")
-                .bodyValue(TransactionVerifyRequest.builder()
-                        .merchantId(config.getMerchantId())
-                        .posId(config.getPosId())
-                        .sessionId(createSessionId(order))
-                        .amount(order.getGrossValue().movePointRight(2).intValue())
-                        .currency("PLN")
-                        .orderId(receiveDTO.getOrderId())
-                        .sign(createVerifySign(receiveDTO, order))
-                        .build())
+        ResponseEntity<TransactionVerifyResponse> result = p24Client.put().uri("/transaction/verify")
+                .bodyValue(createVerifyRequest(config, order, receiveDTO))
                 .retrieve()
                 .toEntity(TransactionVerifyResponse.class)
                 .block();
@@ -115,42 +60,4 @@ public class PaymentMethodP24 {
         return result.getBody().getData().status();
     }
 
-    private String createVerifySign(NotificationReceiveDTO receiveDTO, Order order) {
-        String json = "{\"sessionId\":\"" + createSessionId(order) +
-                "\",\"orderId\":" + receiveDTO.getOrderId() +
-                ",\"amount\":" + order.getGrossValue().movePointRight(2).intValue() +
-                ",\"currency\":\"PLN\",\"crc\":\"" + (config.isTestMode() ? config.getTestCrc() : config.getCrc()) + "\"}";
-        return DigestUtils.sha384Hex(json);
-    }
-
-    private void validate(NotificationReceiveDTO receiveDTO, Order order) {
-        validateField(config.getMerchantId().equals(receiveDTO.getMerchantId()));
-        validateField(config.getPosId().equals(receiveDTO.getPosId()));
-        validateField(createSessionId(order).equals(receiveDTO.getSessionId()));
-        validateField(order.getGrossValue().compareTo(BigDecimal.valueOf(receiveDTO.getAmount()).movePointLeft(2)) == 0);
-        validateField(order.getGrossValue().compareTo(BigDecimal.valueOf(receiveDTO.getOriginAmount()).movePointLeft(2)) == 0);
-        validateField("PLN".equals(receiveDTO.getCurrency()));
-        validateField(createReceivedSign(receiveDTO, order).equals(receiveDTO.getSign()));
-    }
-
-    private String createReceivedSign(NotificationReceiveDTO receiveDTO, Order order) {
-        String json = "{\"merchantId\":" + config.getMerchantId() +
-                ",\"posId\":" + config.getPosId() +
-                ",\"sessionId\":\"" + createSessionId(order) +
-                "\",\"amount\":" + order.getGrossValue().movePointRight(2).intValue() +
-                ",\"originAmount\":" + order.getGrossValue().movePointRight(2).intValue() +
-                ",\"currency\":\"PLN\"" +
-                ",\"orderId\":" + receiveDTO.getOrderId() +
-                ",\"methodId\":" + receiveDTO.getMethodId() +
-                ",\"statement\":\"" + receiveDTO.getStatement() +
-                "\",\"crc\":\"" + (config.isTestMode() ? config.getTestCrc() : config.getCrc()) + "\"}";
-
-        return DigestUtils.sha384Hex(json);
-    }
-
-    private void validateField(boolean condition) {
-        if (!condition) {
-            throw new RuntimeException("Validation failed");
-        }
-    }
 }
