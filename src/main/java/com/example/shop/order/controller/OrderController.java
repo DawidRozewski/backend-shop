@@ -13,6 +13,7 @@ import com.example.shop.order.service.OrderService;
 import com.example.shop.order.service.PaymentService;
 import com.example.shop.order.service.ShipmentService;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -70,6 +71,9 @@ public class OrderController {
                                     @RequestBody NotificationReceiveDTO receiveDTO,
                                     HttpServletRequest request
     ) {
-        orderService.receiveNotification(orderHash, receiveDTO, request.getRemoteAddr());
+        String forwardedAddress = request.getHeader("x-forwarded-for");
+        orderService.receiveNotification(orderHash, receiveDTO,
+                StringUtils.isNoneEmpty(forwardedAddress) ? forwardedAddress : request.getRemoteAddr()
+        );
     }
 }
